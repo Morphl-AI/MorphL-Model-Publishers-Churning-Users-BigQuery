@@ -26,4 +26,7 @@ echo ${DEST_GCS_AVRO_FILE} | grep '^gs://bq_avro_morphl/ga_sessions_.*.avro$' &&
 mv /opt/landing/${GA_SESSIONS_DATA_ID}.avro ${LOCAL_AVRO_FILE}
 hdfs dfs -mkdir -p ${FQ_BQ_AVRO_HDFS_DIR}
 hdfs dfs -copyFromLocal -f ${LOCAL_AVRO_FILE} ${FQ_BQ_AVRO_HDFS_DIR}/${DAY_OF_DATA_CAPTURE}_${WEBSITE_URL}.avro
+export LOCAL_AVRO_FILE
+export WEBSITE_URL
+spark-submit --jars /opt/spark/jars/spark-cassandra-connector.jar,/opt/spark/jars/jsr166e.jar,/opt/spark/jars/spark-avro.jar /opt/code/ingestion/bq_extractor/ga_chp_bq_ingest_avro_file.py
 # rm ${LOCAL_AVRO_FILE}
