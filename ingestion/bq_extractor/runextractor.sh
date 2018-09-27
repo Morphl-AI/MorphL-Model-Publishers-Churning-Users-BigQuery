@@ -29,4 +29,4 @@ hdfs dfs -copyFromLocal -f ${LOCAL_AVRO_FILE} ${FQ_BQ_AVRO_HDFS_DIR}/${DAY_OF_DA
 export LOCAL_AVRO_FILE
 export WEBSITE_URL
 spark-submit --jars /opt/spark/jars/spark-cassandra-connector.jar,/opt/spark/jars/jsr166e.jar,/opt/spark/jars/spark-avro.jar /opt/code/ingestion/bq_extractor/ga_chp_bq_ingest_avro_file.py
-# rm ${LOCAL_AVRO_FILE}
+rm ${LOCAL_AVRO_FILE}
