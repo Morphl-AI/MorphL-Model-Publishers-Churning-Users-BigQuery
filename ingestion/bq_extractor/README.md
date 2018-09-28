@@ -33,15 +33,15 @@ The results of the query are converted into the Avro format and saved to Google 
 ```
 bq extract --destination_format=AVRO ${DEST_TABLE} ${DEST_GCS_AVRO_FILE}
 ```
-The BigQuery table DEST_TABLE is deleted (following a safeguard conditional):
+The BigQuery table `DEST_TABLE` is deleted (following a safeguard conditional):
 ```
 echo ${DEST_TABLE} | grep ^bq_avro_morphl.ga_sessions_ && bq rm -f ${DEST_TABLE}
 ```
-The resulting Avro file DEST_GCS_AVRO_FILE is downloaded from GCS to the local directory `/opt/landing`:
+The resulting Avro file `DEST_GCS_AVRO_FILE` is downloaded from GCS to the local directory `/opt/landing`:
 ```
 gsutil cp ${DEST_GCS_AVRO_FILE} /opt/landing/
 ```
-The remote Avro file DEST_GCS_AVRO_FILE is deleted (following a safeguard conditional):
+The remote Avro file `DEST_GCS_AVRO_FILE` is deleted (following a safeguard conditional):
 ```
 echo ${DEST_GCS_AVRO_FILE} | grep '^gs://bq_avro_morphl/ga_sessions_.*.avro$' && gsutil rm ${DEST_GCS_AVRO_FILE}
 ```
