@@ -45,5 +45,5 @@ The remote Avro file DEST_GCS_AVRO_FILE is deleted (following a safeguard condit
 ```
 echo ${DEST_GCS_AVRO_FILE} | grep '^gs://bq_avro_morphl/ga_sessions_.*.avro$' && gsutil rm ${DEST_GCS_AVRO_FILE}
 ```
-A PySpark script then converts the contents of LOCAL_AVRO_FILE into a DataFrame.
+The PySpark script `ga_chp_bq_ingest_avro_file.py` then converts the contents of LOCAL_AVRO_FILE into a DataFrame.  
 Finally, the DataFrame is saved to Cassandra.
