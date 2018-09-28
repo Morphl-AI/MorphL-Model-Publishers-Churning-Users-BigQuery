@@ -12,6 +12,9 @@ cat > /opt/secrets/website_url.txt << EOF
 www.websitename.com
 EOF
 ```
+4. A BigQuery dataset called `bq_avro_morphl` is present.  
+5. A GCS bucket called `bq_avro_morphl` is present.
+
 The following commands are part of `runextractor.sh` and their purpose is to create the authenticated environment necessary for the CLI utilities `bq` and `gsutil` to run successfully:
 ```
 gcloud config set project ${GCP_PROJECT_ID}
