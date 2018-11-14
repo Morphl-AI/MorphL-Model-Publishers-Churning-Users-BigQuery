@@ -12,16 +12,17 @@ MORPHL_CASSANDRA_USERNAME = getenv('MORPHL_CASSANDRA_USERNAME')
 MORPHL_CASSANDRA_PASSWORD = getenv('MORPHL_CASSANDRA_PASSWORD')
 MORPHL_CASSANDRA_KEYSPACE = getenv('MORPHL_CASSANDRA_KEYSPACE')
 
+
 def main():
     spark_session = (
         SparkSession.builder
-                    .appName(APPLICATION_NAME)
-                    .master(MASTER_URL)
-                    .config('spark.cassandra.connection.host', MORPHL_SERVER_IP_ADDRESS)
-                    .config('spark.cassandra.auth.username', MORPHL_CASSANDRA_USERNAME)
-                    .config('spark.cassandra.auth.password', MORPHL_CASSANDRA_PASSWORD)
-                    .config('spark.sql.shuffle.partitions', 16)
-                    .getOrCreate())
+        .appName(APPLICATION_NAME)
+        .master(MASTER_URL)
+        .config('spark.cassandra.connection.host', MORPHL_SERVER_IP_ADDRESS)
+        .config('spark.cassandra.auth.username', MORPHL_CASSANDRA_USERNAME)
+        .config('spark.cassandra.auth.password', MORPHL_CASSANDRA_PASSWORD)
+        .config('spark.sql.shuffle.partitions', 16)
+        .getOrCreate())
 
     log4j = spark_session.sparkContext._jvm.org.apache.log4j
     log4j.LogManager.getRootLogger().setLevel(log4j.Level.ERROR)
@@ -29,7 +30,7 @@ def main():
     avro_df = (
         spark_session
         .read
-        .format('com.databricks.spark.avro')
+        .format('avro')
         .load(LOCAL_AVRO_FILE))
 
     save_options_ga_chp_bq_features_raw = {
@@ -37,13 +38,14 @@ def main():
         'table': 'ga_chp_bq_features_raw'}
 
     (avro_df
-         .withColumn('day_of_data_capture', f.lit(DAY_OF_DATA_CAPTURE))
-         .withColumn('website_url', f.lit(WEBSITE_URL))
-         .write
-         .format('org.apache.spark.sql.cassandra')
-         .mode('append')
-         .options(**save_options_ga_chp_bq_features_raw)
-         .save())
+     .withColumn('day_of_data_capture', f.lit(DAY_OF_DATA_CAPTURE))
+     .withColumn('website_url', f.lit(WEBSITE_URL))
+     .write
+     .format('org.apache.spark.sql.cassandra')
+     .mode('append')
+     .options(**save_options_ga_chp_bq_features_raw)
+     .save())
+
 
 if __name__ == '__main__':
     main()
