@@ -7,9 +7,7 @@ SELECT
   page_views,
   IF(device='mobile', 1, 0) AS is_mobile,
   IF(device='desktop', 1, 0) AS is_desktop,
-  IF(device='tablet', 1, 0) AS is_tablet,
-  IF(session_dates[SAFE_OFFSET(0)] IS NULL, 0, DATE_DIFF(CURRENT_DATE(), PARSE_DATE("%Y%m%d", session_dates[SAFE_OFFSET(0)]), DAY) ) AS days_since_last_session,
-  session_dates
+  IF(device='tablet', 1, 0) AS is_tablet
 FROM(
   SELECT
     clientId,
@@ -18,13 +16,12 @@ FROM(
     SUM(CASE WHEN totals.hits IS NOT NULL THEN totals.hits ELSE 0 END) AS no_hits,
     SUM(CASE WHEN totals.timeOnSite IS NOT NULL THEN totals.timeOnSite ELSE 0 END) AS session_duration,
     SUM(CASE WHEN totals.pageViews IS NOT NULL THEN totals.pageViews ELSE 0 END) AS page_views,
-    ANY_VALUE(device.deviceCategory) AS device,
-    ARRAY_AGG(DISTINCT date ORDER BY date DESC) AS session_dates
+    ANY_VALUE(device.deviceCategory) AS device
   FROM `GCP_PROJECT_ID.SRC_BQ_DATASET.GA_SESSIONS_DATA_ID`
   WHERE totals.visits = 1
     AND clientId IS NOT NULL
     AND ARRAY_LENGTH(ARRAY((SELECT DISTINCT page.hostname FROM UNNEST(hits) hits WHERE page.hostname = 'WEBSITE_URL'))) > 0
   GROUP BY clientId
   ORDER BY sessions ASC
-) WHERE sessions > 1
+)
 
