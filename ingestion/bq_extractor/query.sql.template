@@ -8,7 +8,8 @@ SELECT
   IF(device='mobile', 1, 0) AS is_mobile,
   IF(device='desktop', 1, 0) AS is_desktop,
   IF(device='tablet', 1, 0) AS is_tablet,
-  IF(session_dates[SAFE_OFFSET(0)] IS NULL, 0, DATE_DIFF(CURRENT_DATE(), PARSE_DATE("%Y%m%d", session_dates[SAFE_OFFSET(0)]), DAY) ) AS days_since_last_session
+  IF(session_dates[SAFE_OFFSET(0)] IS NULL, 0, DATE_DIFF(CURRENT_DATE(), PARSE_DATE("%Y%m%d", session_dates[SAFE_OFFSET(0)]), DAY) ) AS days_since_last_session,
+  session_dates
 FROM(
   SELECT
     clientId,
