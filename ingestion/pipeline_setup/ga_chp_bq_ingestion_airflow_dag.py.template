@@ -2,15 +2,10 @@ import datetime
 from airflow.models import DAG
 from airflow.operators.bash_operator import BashOperator
 
-
-# TODO make this dynamic
-START_DATE_AS_PY_CODE = datetime.datetime(2018, 9, 15, 0, 0, 0, 0)
-
-
-args = { 'owner': 'airflow',
-         'start_date': START_DATE_AS_PY_CODE,
-         'retries': 16,
-         'retry_delay': datetime.timedelta(minutes=30) }
+args = {'owner': 'airflow',
+        'start_date': START_DATE_AS_PY_CODE,
+        'retries': 16,
+        'retry_delay': datetime.timedelta(minutes=30)}
 
 dag = DAG(dag_id='ga_chp_bq_ingestion_pipeline',
           default_args=args,
@@ -19,7 +14,6 @@ dag = DAG(dag_id='ga_chp_bq_ingestion_pipeline',
 # Do not remove the extra space at the end (the one after 'runextractor.sh')
 task_1_run_extractor_cmd_parts = [
     'DAY_OF_DATA_CAPTURE={{ ds }}',
-    'SRC_BQ_DATASET=92806566',
     'DEST_BQ_DATASET=bq_avro_morphl',
     'DEST_GCS_BUCKET=bq_avro_morphl',
     'docker run --rm --net host',
