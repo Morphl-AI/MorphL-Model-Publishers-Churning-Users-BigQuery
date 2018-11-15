@@ -1,6 +1,5 @@
 set -e
 
-rm -r /opt/code
 cp -r /opt/ga_chp_bq /opt/code
 cd /opt/code
 git pull
@@ -23,6 +22,7 @@ DEST_GCS_AVRO_FILE=gs://${DEST_GCS_BUCKET}/${GA_SESSIONS_DATA_ID}.avro
 
 # Compose avro path file for local filesystem
 WEBSITE_URL=$(</opt/secrets/website_url.txt)
+SRC_BQ_DATASET=$(</opt/secrets/src_bq_dataset.txt)
 LOCAL_AVRO_FILE=/opt/landing/${DAY_OF_DATA_CAPTURE}_${WEBSITE_URL}.avro
 
 # Load Google Cloud service account credentials
