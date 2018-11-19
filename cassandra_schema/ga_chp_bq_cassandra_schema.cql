@@ -13,7 +13,7 @@ CREATE TABLE morphl.ga_chp_bq_features_raw (
   is_desktop double,
   is_tablet double,
   days_since_last_session double,
-  session_dates list<date>,
+  session_dates list<text>,
   PRIMARY KEY ((client_id), day_of_data_capture, website_url)
 ) WITH CLUSTERING ORDER BY (day_of_data_capture DESC);
 
