@@ -14,3 +14,13 @@ CREATE TABLE morphl.ga_chp_bq_features_raw (
   is_tablet double,
   PRIMARY KEY ((client_id), day_of_data_capture, website_url)
 ) WITH CLUSTERING ORDER BY (day_of_data_capture DESC);
+
+CREATE TABLE morphl.ga_chp_bq_config_parameters (
+  morphl_component_name text,
+  parameter_name text,
+  parameter_value text,
+  PRIMARY KEY ((morphl_component_name, parameter_name))
+);
+
+INSERT INTO morphl.ga_chp_bq_config_parameters (morphl_component_name,parameter_name,parameter_value)
+VALUES ('ga_chp_bq','days_worth_of_data_to_load','60');

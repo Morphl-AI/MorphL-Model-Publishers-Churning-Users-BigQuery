@@ -1,0 +1,3 @@
+INSERT INTO morphl.ga_chp_bq_config_parameters (morphl_component_name,parameter_name,parameter_value)
+VALUES ('ga_chp_bq','days_worth_of_data_to_load','DAYS_WORTH_OF_DATA_TO_LOAD');
+
