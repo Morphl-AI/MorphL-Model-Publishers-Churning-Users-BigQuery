@@ -10,7 +10,7 @@ TRAINING_INTERVAL=$(</opt/secrets/training_interval.txt)
 GCP_PROJECT_ID=$(jq -r '.project_id' ${KEY_FILE_LOCATION})
 
 # Compose source BQ table name
-GA_SESSIONS_DATA_ID=ga_sessions_days_$(echo ${TRAINING_INTERVAL} | sed 's/-//g')_$(echo ${DAY_OF_DATA_CAPTURE} | sed 's/-//g')
+GA_SESSIONS_DATA_ID=ga_sessions_$(echo ${DAY_OF_DATA_CAPTURE} | sed 's/-//g')_$(echo ${TRAINING_INTERVAL} | sed 's/-//g')_days
 
 # Compose destination BQ table name
 DEST_TABLE=${DEST_BQ_DATASET}.${GA_SESSIONS_DATA_ID}
@@ -21,7 +21,7 @@ DEST_GCS_AVRO_FILE=gs://${DEST_GCS_BUCKET}/${GA_SESSIONS_DATA_ID}.avro
 # Compose avro path file for local filesystem
 WEBSITE_URL=$(</opt/secrets/website_url.txt)
 SRC_BQ_DATASET=$(</opt/secrets/src_bq_dataset.txt)
-LOCAL_AVRO_FILE=/opt/landing/days_${TRAINING_INTERVAL}_${DAY_OF_DATA_CAPTURE}_${WEBSITE_URL}.avro
+LOCAL_AVRO_FILE=/opt/landing/${DAY_OF_DATA_CAPTURE}_${TRAINING_INTERVAL}_days_${WEBSITE_URL}.avro
 
 # Load Google Cloud service account credentials
 gcloud config set project ${GCP_PROJECT_ID}
