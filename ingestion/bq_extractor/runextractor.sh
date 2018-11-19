@@ -21,7 +21,7 @@ DEST_GCS_AVRO_FILE=gs://${DEST_GCS_BUCKET}/${GA_SESSIONS_DATA_ID}.avro
 # Compose avro path file for local filesystem
 WEBSITE_URL=$(</opt/secrets/website_url.txt)
 SRC_BQ_DATASET=$(</opt/secrets/src_bq_dataset.txt)
-LOCAL_AVRO_FILE=/opt/landing/${DAY_OF_DATA_CAPTURE}_${WEBSITE_URL}.avro
+LOCAL_AVRO_FILE=/opt/landing/days_${TRAINING_INTERVAL}_${DAY_OF_DATA_CAPTURE}_${WEBSITE_URL}.avro
 
 # Load Google Cloud service account credentials
 gcloud config set project ${GCP_PROJECT_ID}
@@ -29,7 +29,7 @@ gcloud auth activate-service-account --key-file=${KEY_FILE_LOCATION}
 bq ls &>/dev/null
 
 # Write dynamic variables to the query template file
-sed "s/GCP_PROJECT_ID/${GCP_PROJECT_ID}/g;s/SRC_BQ_DATASET/${SRC_BQ_DATASET}/g;s/WEBSITE_URL/${WEBSITE_URL}/g" /opt/code/ingestion/bq_extractor/query.sql.template > /opt/code/ingestion/bq_extractor/query.sql
+sed "s/GCP_PROJECT_ID/${GCP_PROJECT_ID}/g;s/SRC_BQ_DATASET/${SRC_BQ_DATASET}/g;s/TRAINING_INTERVAL/${TRAINING_INTERVAL}/g;s/WEBSITE_URL/${WEBSITE_URL}/g" /opt/code/ingestion/bq_extractor/query.sql.template > /opt/code/ingestion/bq_extractor/query.sql
 
 # Run query and save result to a temporary BQ destination table 
 bq query --use_legacy_sql=false --destination_table=${DEST_TABLE} < /opt/code/ingestion/bq_extractor/query.sql &>/dev/null
