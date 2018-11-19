@@ -20,8 +20,11 @@ FROM(
     SUM(CASE WHEN totals.pageViews IS NOT NULL THEN totals.pageViews ELSE 0 END) AS page_views,
     ANY_VALUE(device.deviceCategory) AS device,
     ARRAY_AGG(DISTINCT date ORDER BY date DESC) AS session_dates
-  FROM `GCP_PROJECT_ID.SRC_BQ_DATASET.GA_SESSIONS_DATA_ID`
-  WHERE totals.visits = 1
+  FROM `GCP_PROJECT_ID.SRC_BQ_DATASET.ga_sessions_*`
+  WHERE 
+    _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d',DATE_SUB(CURRENT_DATE(), INTERVAL TRAINING_INTERVAL DAY ))
+    AND FORMAT_DATE('%Y%m%d',DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
+    AND totals.visits = 1
     AND clientId IS NOT NULL
     AND ARRAY_LENGTH(ARRAY((SELECT DISTINCT page.hostname FROM UNNEST(hits) hits WHERE page.hostname = 'WEBSITE_URL'))) > 0
   GROUP BY clientId

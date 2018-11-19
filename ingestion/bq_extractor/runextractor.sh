@@ -4,15 +4,13 @@ cp -r /opt/ga_chp_bq /opt/code
 cd /opt/code
 git pull
 
-DATE_FROM=$(cut -d'|' -f1 /opt/secrets/pipe_delimited_date_range.txt)
-DATE_TO=$(cut -d'|' -f2 /opt/secrets/pipe_delimited_date_range.txt)
-[[ "${DAY_OF_DATA_CAPTURE}" < "${DATE_FROM}" || "${DAY_OF_DATA_CAPTURE}" > "${DATE_TO}" ]] && exit 0
+TRAINING_INTERVAL=$(</opt/secrets/training_interval.txt)
 
 # Get project id from the service account file
 GCP_PROJECT_ID=$(jq -r '.project_id' ${KEY_FILE_LOCATION})
 
 # Compose source BQ table name
-GA_SESSIONS_DATA_ID=ga_sessions_$(echo ${DAY_OF_DATA_CAPTURE} | sed 's/-//g')
+GA_SESSIONS_DATA_ID=ga_sessions_days_$(echo ${TRAINING_INTERVAL} | sed 's/-//g')_$(echo ${DAY_OF_DATA_CAPTURE} | sed 's/-//g')
 
 # Compose destination BQ table name
 DEST_TABLE=${DEST_BQ_DATASET}.${GA_SESSIONS_DATA_ID}
@@ -31,7 +29,7 @@ gcloud auth activate-service-account --key-file=${KEY_FILE_LOCATION}
 bq ls &>/dev/null
 
 # Write dynamic variables to the query template file
-sed "s/GCP_PROJECT_ID/${GCP_PROJECT_ID}/g;s/SRC_BQ_DATASET/${SRC_BQ_DATASET}/g;s/GA_SESSIONS_DATA_ID/${GA_SESSIONS_DATA_ID}/g;s/WEBSITE_URL/${WEBSITE_URL}/g" /opt/code/ingestion/bq_extractor/query.sql.template > /opt/code/ingestion/bq_extractor/query.sql
+sed "s/GCP_PROJECT_ID/${GCP_PROJECT_ID}/g;s/SRC_BQ_DATASET/${SRC_BQ_DATASET}/g;s/WEBSITE_URL/${WEBSITE_URL}/g" /opt/code/ingestion/bq_extractor/query.sql.template > /opt/code/ingestion/bq_extractor/query.sql
 
 # Run query and save result to a temporary BQ destination table 
 bq query --use_legacy_sql=false --destination_table=${DEST_TABLE} < /opt/code/ingestion/bq_extractor/query.sql &>/dev/null
