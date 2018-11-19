@@ -22,7 +22,7 @@ FROM(
     ARRAY_AGG(DISTINCT date ORDER BY date DESC) AS session_dates
   FROM `GCP_PROJECT_ID.SRC_BQ_DATASET.ga_sessions_*`
   WHERE 
-    _TABLE_SUFFIX BETWEEN 'DATE_FROM' AND 'DATE_TO'
+    _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d',DATE('DATE_FROM')) AND FORMAT_DATE('%Y%m%d',DATE('DATE_TO'))
     AND totals.visits = 1
     AND clientId IS NOT NULL
     AND ARRAY_LENGTH(ARRAY((SELECT DISTINCT page.hostname FROM UNNEST(hits) hits WHERE page.hostname = 'WEBSITE_URL'))) > 0

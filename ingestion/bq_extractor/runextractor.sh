@@ -8,7 +8,7 @@ TRAINING_INTERVAL=$(</opt/secrets/training_interval.txt)
 
 # Calculate dates interval
 DATE_TO=$(date --date="${DAY_OF_DATA_CAPTURE} -1 day" +%Y-%m-%d)
-DATE_FROM=$(date --date="${DAY_OF_DATA_CAPTURE} -${TRAINING_INTERVAL} day" +%Y-%m-%d)
+DATE_FROM=$(date --date="${DATE_TO} -${TRAINING_INTERVAL} day" +%Y-%m-%d)
 
 # Get project id from the service account file
 GCP_PROJECT_ID=$(jq -r '.project_id' ${KEY_FILE_LOCATION})
