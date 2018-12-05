@@ -4,12 +4,6 @@ cp -r /opt/ga_chp_bq /opt/code
 cd /opt/code
 git pull
 
-TRAINING_INTERVAL=$(</opt/secrets/training_interval.txt)
-
-# Calculate dates interval
-DATE_TO=$(date --date="${DAY_OF_DATA_CAPTURE} -1 day" +%Y-%m-%d)
-DATE_FROM=$(date --date="${DATE_TO} -${TRAINING_INTERVAL} day" +%Y-%m-%d)
-
 # Get project id from the service account file
 GCP_PROJECT_ID=$(jq -r '.project_id' ${KEY_FILE_LOCATION})
 
@@ -33,10 +27,10 @@ gcloud auth activate-service-account --key-file=${KEY_FILE_LOCATION}
 bq ls &>/dev/null
 
 # Write dynamic variables to the query template file
-sed "s/GCP_PROJECT_ID/${GCP_PROJECT_ID}/g;s/SRC_BQ_DATASET/${SRC_BQ_DATASET}/g;s/DATE_FROM/${DATE_FROM}/g;s/DATE_TO/${DATE_TO}/g;s/WEBSITE_URL/${WEBSITE_URL}/g" /opt/code/ingestion/bq_extractor/query.sql.template > /opt/code/ingestion/bq_extractor/query.sql
+sed "s/GCP_PROJECT_ID/${GCP_PROJECT_ID}/g;s/SRC_BQ_DATASET/${SRC_BQ_DATASET}/g;s/DATE_FROM/${DATE_FROM}/g;s/DATE_TO/${DATE_TO}/g;s/WEBSITE_URL/${WEBSITE_URL}/g" /opt/code/bq_extractor/query.sql.template > /opt/code/bq_extractor/query.sql
 
 # Run query and save result to a temporary BQ destination table 
-bq query --use_legacy_sql=false --destination_table=${DEST_TABLE} < /opt/code/ingestion/bq_extractor/query.sql &>/dev/null
+bq query --use_legacy_sql=false --destination_table=${DEST_TABLE} < /opt/code/bq_extractor/query.sql &>/dev/null
 
 # Extract destination table to an Avro file from Google Cloud Storage
 bq extract --destination_format=AVRO ${DEST_TABLE} ${DEST_GCS_AVRO_FILE}
@@ -55,5 +49,5 @@ mv /opt/landing/${GA_SESSIONS_DATA_ID}.avro ${LOCAL_AVRO_FILE}
 export LOCAL_AVRO_FILE
 export WEBSITE_URL
 
-spark-submit --jars /opt/spark/jars/spark-cassandra-connector.jar,/opt/spark/jars/jsr166e.jar,/opt/spark/jars/spark-avro.jar /opt/code/ingestion/bq_extractor/ga_chp_bq_ingest_avro_file.py
+spark-submit --jars /opt/spark/jars/spark-cassandra-connector.jar,/opt/spark/jars/jsr166e.jar,/opt/spark/jars/spark-avro.jar /opt/code/bq_extractor/ga_chp_bq_ingest_avro_file.py
 rm ${LOCAL_AVRO_FILE}

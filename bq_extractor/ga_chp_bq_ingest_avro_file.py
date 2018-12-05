@@ -35,7 +35,8 @@ def main():
 
     save_options_ga_chp_bq_features_raw = {
         'keyspace': MORPHL_CASSANDRA_KEYSPACE,
-        'table': 'ga_chp_bq_features_raw'}
+        'table': 'ga_chp_bq_features_raw_t'
+    }
 
     (avro_df
      .withColumn('day_of_data_capture', f.lit(DAY_OF_DATA_CAPTURE))
