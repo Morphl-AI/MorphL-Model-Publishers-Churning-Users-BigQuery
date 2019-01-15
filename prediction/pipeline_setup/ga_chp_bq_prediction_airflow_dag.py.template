@@ -7,26 +7,33 @@ args = {'owner': 'airflow',
         'retries': 16,
         'retry_delay': datetime.timedelta(minutes=30)}
 
-dag = DAG(dag_id='ga_chp_bq_training_pipeline',
+dag = DAG(dag_id='ga_chp_bq_prediction_pipeline',
           default_args=args,
-          schedule_interval='@weekly')
+          schedule_interval='0 12 * * *')
 
-# Calculate start and end date for training window
-date_to = START_DATE_AS_PY_CODE - \
-    datetime.timedelta(days=DAYS_PREDICTION_INTERVAL+1)
-date_from = date_to - datetime.timedelta(days=DAYS_TRAINING_INTERVAL-1)
+# Calculate start and end date for prediction window
+date_to = START_DATE_AS_PY_CODE - datetime.timedelta(days=1)
+date_from = date_to - \
+    datetime.timedelta(days=DAYS_PREDICTION_INTERVAL-1)
 
 try:
-    with open('/tmp/ga_chp_bq_training_pipeline_day_as_str.txt', 'r') as f:
+    with open('/tmp/ga_chp_bq_prediction_pipeline_day_as_str.txt', 'r') as f:
         day_as_str = f.read().strip()
 except:
     day_as_str = ''
 
 try:
-    with open('/tmp/ga_chp_bq_training_pipeline_unique_hash.txt', 'r') as f:
+    with open('/tmp/ga_chp_bq_prediction_pipeline_unique_hash.txt', 'r') as f:
         unique_hash = f.read().strip()
 except:
     unique_hash = ''
+
+# Do not remove the extra space at the end (the one after 'ga_chp_truncate_tables_before_prediction_pipeline.sh')
+task_2_truncate_tables_cmd_parts = [
+    f'DAY_AS_STR={day_as_str}',
+    f'UNIQUE_HASH={unique_hash}',
+    'bash /opt/ga_chp_bq/prediction/pipeline_setup/ga_chp_bq_truncate_tables_before_prediction_pipeline.sh ']
+task_2_truncate_tables_cmd = ' '.join(task_2_truncate_tables_cmd_parts)
 
 # Do not remove the extra space at the end (the one after 'runextractor.sh')
 task_3_run_extractor_cmd_parts = [
@@ -35,7 +42,7 @@ task_3_run_extractor_cmd_parts = [
     'DATE_FROM=' + date_from.strftime('%Y-%m-%d'),
     'DEST_BQ_DATASET=bq_avro_morphl',
     'DEST_GCS_BUCKET=bq_avro_morphl',
-    'TRAINING_OR_PREDICTION=training',
+    'TRAINING_OR_PREDICTION=prediction',
     'docker run --rm --net host',
     '-v /opt/secrets:/opt/secrets:ro',
     '-v /opt/ga_chp_bq:/opt/ga_chp_bq:ro',
@@ -61,11 +68,11 @@ task_3_run_extractor_cmd = ' '.join(task_3_run_extractor_cmd_parts)
 task_4_run_basic_preprocessor_cmd_parts = [
     f'DAY_AS_STR={day_as_str}',
     f'UNIQUE_HASH={unique_hash}',
-    'TRAINING_OR_PREDICTION=training',
+    'TRAINING_OR_PREDICTION=prediction',
     'MODELS_DIR=/opt/models',
     'docker run --rm --net host',
     '-v /opt/ga_chp_bq:/opt/ga_chp_bq:ro',
-    '-v /opt/models:/opt/models',
+    '-v /opt/models:/opt/models:ro',
     '-e ENVIRONMENT_TYPE',
     '-e DAY_AS_STR',
     '-e UNIQUE_HASH',
@@ -80,11 +87,11 @@ task_4_run_basic_preprocessor_cmd_parts = [
 task_4_run_basic_preprocessor_cmd = ' '.join(
     task_4_run_basic_preprocessor_cmd_parts)
 
-# Do not remove the extra space at the end (the one after 'ga_chp_bq_preproc_training')
+# Do not remove the extra space at the end (the one after 'ga_chp_bq_preproc_prediction')
 task_5_move_preproc_metadata_cmd_parts = [
     f'DAY_AS_STR={day_as_str}',
     f'UNIQUE_HASH={unique_hash}',
-    'bash /opt/ga_chp_bq/pre_processing/ga_chp_bq_move_metadata.sh ga_chp_bq_preproc_training ']
+    'bash /opt/ga_chp_bq/pre_processing/ga_chp_bq_move_metadata.sh ga_chp_bq_preproc_prediction ']
 task_5_move_preproc_metadata_cmd = ' '.join(
     task_5_move_preproc_metadata_cmd_parts)
 
@@ -92,11 +99,11 @@ task_5_move_preproc_metadata_cmd = ' '.join(
 task_6_run_advanced_preprocessor_cmd_parts = [
     f'DAY_AS_STR={day_as_str}',
     f'UNIQUE_HASH={unique_hash}',
-    'TRAINING_OR_PREDICTION=training',
+    'TRAINING_OR_PREDICTION=prediction',
     'MODELS_DIR=/opt/models',
     'docker run --rm --net host',
     '-v /opt/ga_chp_bq:/opt/ga_chp_bq:ro',
-    '-v /opt/models:/opt/models',
+    '-v /opt/models:/opt/models:ro',
     '-v /opt/hadoop/etc/hadoop:/opt/hadoop/etc/hadoop:ro',
     '-e ENVIRONMENT_TYPE',
     '-e DAY_AS_STR',
@@ -110,51 +117,47 @@ task_6_run_advanced_preprocessor_cmd_parts = [
 task_6_run_advanced_preprocessor_cmd = ' '.join(
     task_6_run_advanced_preprocessor_cmd_parts)
 
-# Do not remove the extra space at the end (the one after 'ga_chp_bq_scaled_features_training')
+# Do not remove the extra space at the end (the one after 'ga_chp_bq_scaled_features_prediction')
 task_7_move_scaled_features_metadata_cmd_parts = [
     f'DAY_AS_STR={day_as_str}',
     f'UNIQUE_HASH={unique_hash}',
-    'bash /opt/ga_chp_bq/pre_processing/ga_chp_bq_move_metadata.sh ga_chp_bq_scaled_features_training ']
+    'bash /opt/ga_chp_bq/pre_processing/ga_chp_bq_move_metadata.sh ga_chp_bq_scaled_features_prediction ']
 task_7_move_scaled_features_metadata_cmd = ' '.join(
     task_7_move_scaled_features_metadata_cmd_parts)
 
-# Do not remove the extra space at the end (the one after 'runmodelgenerator.sh')
-task_8_generate_model_cmd_parts = [
+# Do not remove the extra space at the end (the one after 'runbatchinference.sh')
+task_8_run_batch_inference_cmd_parts = [
     f'DAY_AS_STR={day_as_str}',
     f'UNIQUE_HASH={unique_hash}',
+    'TRAINING_OR_PREDICTION=prediction',
     'MODELS_DIR=/opt/models',
     'docker run --rm --net host',
     '-v /opt/ga_chp_bq:/opt/ga_chp_bq:ro',
-    '-v /opt/models:/opt/models',
+    '-v /opt/models:/opt/models:ro',
     '-v /opt/hadoop/etc/hadoop:/opt/hadoop/etc/hadoop:ro',
     '-e ENVIRONMENT_TYPE',
     '-e DAY_AS_STR',
     '-e UNIQUE_HASH',
+    '-e TRAINING_OR_PREDICTION',
     '-e MODELS_DIR',
     '-e MORPHL_SERVER_IP_ADDRESS',
+    '-e MORPHL_CASSANDRA_USERNAME',
+    '-e MORPHL_CASSANDRA_KEYSPACE',
+    '-e MORPHL_CASSANDRA_PASSWORD',
     '-e LIBHDFS3_CONF',
     'pythoncontainer',
-    'bash /opt/ga_chp_bq/training/model_generator/runmodelgenerator.sh ']
-task_8_generate_model_cmd = ' '.join(task_8_generate_model_cmd_parts)
+    'bash /opt/ga_chp_bq/prediction/batch_inference/runbatchinference.sh ']
+task_8_run_batch_inference_cmd = ' '.join(task_8_run_batch_inference_cmd_parts)
 
-# Do not remove the extra space at the end (the one after 'ga_chp_bq_mark_model_as_valid.sh')
-task_9_mark_model_as_valid_cmd_parts = [
-    f'DAY_AS_STR={day_as_str}',
-    f'UNIQUE_HASH={unique_hash}',
-    f'MODELS_DIR=/opt/models',
-    'bash /opt/ga_chp_bq/training/pipeline_wrapup/ga_chp_bq_mark_model_as_valid.sh ']
-task_9_mark_model_as_valid_cmd = ' '.join(task_9_mark_model_as_valid_cmd_parts)
-
-# Do not remove the extra space at the end (the one after 'ga_chp_bq_generate_id_files_training.sh')
-task_1_generate_id_files_training = BashOperator(
-    task_id='task_1_generate_id_files_training',
-    bash_command='bash /opt/ga_chp_bq/training/pipeline_setup/ga_chp_bq_generate_id_files_training.sh ',
+# Do not remove the extra space at the end (the one after 'ga_chp_bq_generate_id_files_prediction.sh')
+task_1_generate_id_files_prediction = BashOperator(
+    task_id='task_1_generate_id_files_prediction',
+    bash_command='bash /opt/ga_chp_bq/prediction/pipeline_setup/ga_chp_bq_generate_id_files_prediction.sh ',
     dag=dag)
 
-# Do not remove the extra space at the end (the one after 'ga_chp_bq_truncate_tables_before_training_pipeline.sh')
 task_2_truncate_tables = BashOperator(
     task_id='task_2_truncate_tables',
-    bash_command='bash /opt/ga_chp_bq/training/pipeline_setup/ga_chp_bq_truncate_tables_before_training_pipeline.sh ',
+    bash_command=task_2_truncate_tables_cmd,
     dag=dag)
 
 task_3_run_extractor = BashOperator(
@@ -182,22 +185,17 @@ task_7_move_scaled_features_metadata = BashOperator(
     bash_command=task_7_move_scaled_features_metadata_cmd,
     dag=dag)
 
-task_8_generate_model = BashOperator(
-    task_id='task_8_generate_model',
-    bash_command=task_8_generate_model_cmd,
+task_8_run_batch_inference = BashOperator(
+    task_id='task_8_run_batch_inference',
+    bash_command=task_8_run_batch_inference_cmd,
     dag=dag)
 
-task_9_mark_model_as_valid = BashOperator(
-    task_id='task_9_mark_model_as_valid',
-    bash_command=task_9_mark_model_as_valid_cmd,
-    dag=dag)
-
-task_2_truncate_tables.set_upstream(task_1_generate_id_files_training)
+task_2_truncate_tables.set_upstream(task_1_generate_id_files_prediction)
 task_3_run_extractor.set_upstream(task_2_truncate_tables)
 task_4_run_basic_preprocessor.set_upstream(task_3_run_extractor)
 task_5_move_preproc_metadata.set_upstream(task_4_run_basic_preprocessor)
 task_6_run_advanced_preprocessor.set_upstream(task_5_move_preproc_metadata)
 task_7_move_scaled_features_metadata.set_upstream(
     task_6_run_advanced_preprocessor)
-task_8_generate_model.set_upstream(task_7_move_scaled_features_metadata)
-task_9_mark_model_as_valid.set_upstream(task_8_generate_model)
+task_8_run_batch_inference.set_upstream(
+    task_7_move_scaled_features_metadata)

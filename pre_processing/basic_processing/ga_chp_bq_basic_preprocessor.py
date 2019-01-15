@@ -67,12 +67,20 @@ def main():
         'FIRST_VALUE(is_desktop) OVER (PARTITION BY client_id ORDER BY day_of_data_capture DESC) AS is_desktop,'
         'FIRST_VALUE(is_mobile) OVER (PARTITION BY client_id ORDER BY day_of_data_capture DESC) AS is_mobile,'
         'FIRST_VALUE(is_tablet) OVER (PARTITION BY client_id ORDER BY day_of_data_capture DESC) AS is_tablet,'
-        'FIRST_VALUE(days_since_last_session) OVER (PARTITION BY client_id ORDER BY day_of_data_capture DESC) AS days_since_last_session,',
-        'ROW_NUMBER() OVER (PARTITION BY client_id ORDER BY day_of_data_capture DESC) AS rownum,',
-        'AVG(days_since_last_session) OVER (PARTITION BY client_id) AS avgdays',
+        'ROW_NUMBER() OVER (PARTITION BY client_id ORDER BY day_of_data_capture DESC) AS rownum'
+    ]
+
+    if TRAINING_OR_PREDICTION == 'training':
+        grouped_by_client_id_before_dedup_sql_parts = grouped_by_client_id_before_dedup_sql_parts + [
+            ', FIRST_VALUE(days_since_last_session) OVER (PARTITION BY client_id ORDER BY day_of_data_capture DESC) AS days_since_last_session,',
+            'AVG(days_since_last_session) OVER (PARTITION BY client_id) AS avgdays',
+        ]
+
+    grouped_by_client_id_before_dedup_sql_parts = grouped_by_client_id_before_dedup_sql_parts + [
         'FROM',
         'ga_chp_bq_users'
     ]
+
     grouped_by_client_id_before_dedup_sql = ' '.join(
         grouped_by_client_id_before_dedup_sql_parts)
     grouped_by_client_id_before_dedup_df = spark_session.sql(
@@ -147,15 +155,8 @@ def main():
         with open(CHURN_THRESHOLD_FILE, 'w') as fh:
             fh.write(str(churn_threshold))
     else:
-        with open(CHURN_THRESHOLD_FILE, 'r') as fh:
-            churn_threshold = fh.read().strip()
-
-        under_threshold_sql = f'SELECT * FROM grouped_by_client_id WHERE avgdays < {churn_threshold}'
-        under_threshold_df = spark_session.sql(under_threshold_sql)
-        under_threshold_df.createOrReplaceTempView('under_threshold')
-
         final_df = (
-            under_threshold_df
+            grouped_by_client_id_df
             .select('client_id',
                     'bounces', 'events', 'page_views',
                     'session_duration', 'sessions',

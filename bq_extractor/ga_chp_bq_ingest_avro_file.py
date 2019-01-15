@@ -7,6 +7,7 @@ APPLICATION_NAME = 'ingest_avro'
 DAY_OF_DATA_CAPTURE = getenv('DAY_OF_DATA_CAPTURE')
 WEBSITE_URL = getenv('WEBSITE_URL')
 LOCAL_AVRO_FILE = getenv('LOCAL_AVRO_FILE')
+TRAINING_OR_PREDICTION = getenv('TRAINING_OR_PREDICTION')
 MORPHL_SERVER_IP_ADDRESS = getenv('MORPHL_SERVER_IP_ADDRESS')
 MORPHL_CASSANDRA_USERNAME = getenv('MORPHL_CASSANDRA_USERNAME')
 MORPHL_CASSANDRA_PASSWORD = getenv('MORPHL_CASSANDRA_PASSWORD')
@@ -35,7 +36,8 @@ def main():
 
     save_options_ga_chp_bq_features_raw = {
         'keyspace': MORPHL_CASSANDRA_KEYSPACE,
-        'table': 'ga_chp_bq_features_raw_t'
+        'table': 'ga_chp_bq_features_raw_t' if TRAINING_OR_PREDICTION ==
+        'training' else 'ga_chp_bq_features_raw_p'
     }
 
     (avro_df

@@ -27,15 +27,15 @@ gcloud auth activate-service-account --key-file=${KEY_FILE_LOCATION}
 bq ls &>/dev/null
 
 # Write dynamic variables to the query template file
-sed "s/GCP_PROJECT_ID/${GCP_PROJECT_ID}/g;s/SRC_BQ_DATASET/${SRC_BQ_DATASET}/g;s/DATE_FROM/${DATE_FROM}/g;s/DATE_TO/${DATE_TO}/g;s/WEBSITE_URL/${WEBSITE_URL}/g" /opt/code/bq_extractor/query.sql.template > /opt/code/bq_extractor/query.sql
+sed "s/GCP_PROJECT_ID/${GCP_PROJECT_ID}/g;s/SRC_BQ_DATASET/${SRC_BQ_DATASET}/g;s/DATE_FROM/${DATE_FROM}/g;s/DATE_TO/${DATE_TO}/g;s/WEBSITE_URL/${WEBSITE_URL}/g" "/opt/code/${TRAINING_OR_PREDICTION}/query.sql.template" > "/opt/code/${TRAINING_OR_PREDICTION}/query.sql"
 
 # Run query and save result to a temporary BQ destination table 
-bq query --use_legacy_sql=false --destination_table=${DEST_TABLE} < /opt/code/bq_extractor/query.sql &>/dev/null
+bq query --use_legacy_sql=false --destination_table=${DEST_TABLE} < "/opt/code/${TRAINING_OR_PREDICTION}/query.sql" &>/dev/null
 
 # Extract destination table to an Avro file from Google Cloud Storage
 bq extract --destination_format=AVRO ${DEST_TABLE} ${DEST_GCS_AVRO_FILE}
 
-# Remove temporary destionation table
+# Remove temporary destination table
 echo ${DEST_TABLE} | grep ^bq_avro_morphl.ga_sessions_ && bq rm -f ${DEST_TABLE}
 
 # Download Avro file from Google Cloud Storage to filesystem

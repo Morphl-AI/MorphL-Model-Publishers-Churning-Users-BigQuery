@@ -29,6 +29,7 @@ CREATE TABLE morphl.ga_chp_bq_features_raw_p (
   is_mobile double,
   is_desktop double,
   is_tablet double,
+  session_dates list<text>,
   PRIMARY KEY ((client_id), day_of_data_capture, website_url)
 ) WITH CLUSTERING ORDER BY (day_of_data_capture DESC);
 
@@ -59,6 +60,12 @@ CREATE TABLE morphl.ga_chp_bq_features_prediction (
   PRIMARY KEY ((client_id))
 );
 
+CREATE TABLE morphl.ga_chp_bq_predictions (
+  client_id text,
+  prediction double,
+  PRIMARY KEY ((client_id))
+);
+
 CREATE TABLE morphl.ga_chp_bq_valid_models (
   always_zero int,
   day_as_str text,
@@ -79,7 +86,7 @@ CREATE TABLE morphl.ga_chp_bq_config_parameters (
 );
 
 INSERT INTO morphl.ga_chp_bq_config_parameters (morphl_component_name,parameter_name,parameter_value)
-VALUES ('ga_chp_bq','days_training_delay','30');
+VALUES ('ga_chp_bq','days_training_interval','60');
 
 INSERT INTO morphl.ga_chp_bq_config_parameters (morphl_component_name,parameter_name,parameter_value)
-VALUES ('ga_chp_bq','days_worth_of_data_to_load','60');
+VALUES ('ga_chp_bq','days_prediction_interval','60');
