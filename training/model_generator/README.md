@@ -1,4 +1,4 @@
-# Model Generator for Predicting Churning Users for Publishers
+# Model Generator for Predicting Churning Users for Publishers (Google Analytics 360 & BigQuery)
 
 ## Purpose
 
@@ -18,8 +18,4 @@ Call the `ModelGenerator` object's `generate_and_save_model()` method.
 
 ## Notes
 
-If the warning: "FutureWarning: Coversion of the second argument of issubdtype from float to np.floating is deprecated." is encountered, upgrade the "h5.py" package to version number 2.8.0 by running: "conda update h5py".
-
-## Future Plans
-
-In future we should find a way to train the model in batches because training requires us to compute the dask dataframe and turn it into a pandas dataframe which is very resource intensive.
+If the warning: "FutureWarning: Conversion of the second argument of issubdtype from float to np.floating is deprecated." is encountered, upgrade the "h5.py" package to version number 2.8.0 by running: "conda update h5py".
