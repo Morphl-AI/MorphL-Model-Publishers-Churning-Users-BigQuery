@@ -2,9 +2,8 @@ import dask.dataframe as dd
 import numpy as np
 from os import getenv
 from sklearn.externals import joblib
-from sklearn.preprocessing.data import PowerTransformer
+from sklearn.preprocessing import PowerTransformer, StandardScaler, Normalizer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, Normalizer
 from sklearn.impute import SimpleImputer
 
 
