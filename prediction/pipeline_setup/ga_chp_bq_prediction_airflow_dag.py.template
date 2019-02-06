@@ -11,11 +11,6 @@ dag = DAG(dag_id='ga_chp_bq_prediction_pipeline',
           default_args=args,
           schedule_interval='0 12 * * *')
 
-# Calculate start and end date for prediction window
-date_to = START_DATE_AS_PY_CODE - datetime.timedelta(days=1)
-date_from = date_to - \
-    datetime.timedelta(days=DAYS_PREDICTION_INTERVAL-1)
-
 try:
     with open('/tmp/ga_chp_bq_prediction_pipeline_day_as_str.txt', 'r') as f:
         day_as_str = f.read().strip()
@@ -38,8 +33,6 @@ task_2_truncate_tables_cmd = ' '.join(task_2_truncate_tables_cmd_parts)
 # Do not remove the extra space at the end (the one after 'runextractor.sh')
 task_3_run_extractor_cmd_parts = [
     'DAY_OF_DATA_CAPTURE={{ ds }}',
-    'DATE_TO=' + date_to.strftime('%Y-%m-%d'),
-    'DATE_FROM=' + date_from.strftime('%Y-%m-%d'),
     'DEST_BQ_DATASET=bq_avro_morphl',
     'DEST_GCS_BUCKET=bq_avro_morphl',
     'TRAINING_OR_PREDICTION=prediction',
@@ -48,12 +41,12 @@ task_3_run_extractor_cmd_parts = [
     '-v /opt/ga_chp_bq:/opt/ga_chp_bq:ro',
     '-v /opt/landing:/opt/landing',
     '-e DAY_OF_DATA_CAPTURE',
-    '-e DATE_TO',
-    '-e DATE_FROM',
     '-e SRC_BQ_DATASET',
     '-e DEST_BQ_DATASET',
     '-e DEST_GCS_BUCKET',
     '-e TRAINING_OR_PREDICTION',
+    '-e DAYS_TRAINING_INTERVAL',
+    '-e DAYS_PREDICTION_INTERVAL',
     '-e KEY_FILE_LOCATION',
     '-e ENVIRONMENT_TYPE',
     '-e MORPHL_SERVER_IP_ADDRESS',
