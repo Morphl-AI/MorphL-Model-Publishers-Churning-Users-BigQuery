@@ -7,11 +7,11 @@ git pull
 # Calculate dates interval depending on the training / prediction setting
 if [ "${TRAINING_OR_PREDICTION}" = "training" ]
 then
-    DATE_TO=$(date --date="${DAY_OF_DATA_CAPTURE} -${DAYS_PREDICTION_INTERVAL} day -1 day" +%Y-%m-%d)
-    DATE_FROM=$(date --date="${DATE_TO} -${DAYS_TRAINING_INTERVAL} day + 1 day" +%Y-%m-%d)
+    DATE_TO=$(date --date="${DAY_OF_DATA_CAPTURE} -${PREDICTION_INTERVAL} day -1 day" +%Y-%m-%d)
+    DATE_FROM=$(date --date="${DATE_TO} -${TRAINING_INTERVAL} day + 1 day" +%Y-%m-%d)
 else
     DATE_TO=$(date --date="${DAY_OF_DATA_CAPTURE} -1 day" +%Y-%m-%d)
-    DATE_FROM=$(date --date="${DATE_TO} -${DAYS_PREDICTION_INTERVAL} day + 1 day" +%Y-%m-%d)
+    DATE_FROM=$(date --date="${DATE_TO} -${PREDICTION_INTERVAL} day + 1 day" +%Y-%m-%d)
 fi
 
 # Get project id from the service account file
