@@ -29,6 +29,8 @@ task_3_run_extractor_cmd_parts = [
     'DEST_BQ_DATASET=bq_avro_morphl',
     'DEST_GCS_BUCKET=bq_avro_morphl',
     'TRAINING_OR_PREDICTION=training',
+    'DAYS_TRAINING_INTERVAL=' + DAYS_TRAINING_INTERVAL,
+    'DAYS_PREDICTION_INTERVAL=' + DAYS_PREDICTION_INTERVAL,
     'docker run --rm --net host',
     '-v /opt/secrets:/opt/secrets:ro',
     '-v /opt/ga_chp_bq:/opt/ga_chp_bq:ro',
