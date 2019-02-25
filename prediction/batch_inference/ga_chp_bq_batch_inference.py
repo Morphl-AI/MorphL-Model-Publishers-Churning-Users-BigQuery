@@ -22,7 +22,12 @@ class Cassandra:
         self.MORPHL_CASSANDRA_PASSWORD = getenv('MORPHL_CASSANDRA_PASSWORD')
         self.MORPHL_CASSANDRA_KEYSPACE = getenv('MORPHL_CASSANDRA_KEYSPACE')
 
-        self.CQL_STMT = 'INSERT INTO ga_chp_bq_predictions (client_id,prediction) VALUES (?,?)'
+        self.prep_stmt = {}
+
+        template_for_prediction = 'INSERT INTO ga_chp_bq_predictions (client_id,prediction) VALUES (?,?)'
+        template_for_predictions_by_date = 'INSERT INTO ga_chp_bq_predictions_by_prediction_date (prediction_date, client_id, prediction) VALUES (?,?,?)'
+        template_for_predictions_statistics = 'UPDATE ga_chp_bq_predictions_statistics SET loyal=loyal+?, neutral=neutral+?, churning=churning+?, lost=lost+? WHERE prediction_date=?'
+
 
         self.CASS_REQ_TIMEOUT = 3600.0
 
@@ -33,12 +38,36 @@ class Cassandra:
             [self.MORPHL_SERVER_IP_ADDRESS], auth_provider=self.auth_provider)
         self.session = self.cluster.connect(self.MORPHL_CASSANDRA_KEYSPACE)
 
-        self.prep_stmt = self.session.prepare(self.CQL_STMT)
+        self.prep_stmt['prediction'] = self.session.prepare(template_for_prediction)
+        self.prep_stmt['predictions_by_date'] = self.session.prepare(template_for_predictions_by_date)
+        self.prep_stmt['predictions_statistics'] = self.session.prepare(template_for_predictions_statistics)
 
     def save_prediction(self, client_id, prediction):
         bind_list = [client_id, prediction]
-        self.session.execute(self.prep_stmt, bind_list,
+        self.session.execute(self.prep_stmt['prediction'], bind_list,
                              timeout=self.CASS_REQ_TIMEOUT)
+
+    def update_predictions_statistics(self, series_obj):
+
+        loyal = series_obj[series_obj <= 0.4].count().compute()
+
+        neutral = series_obj[(series_obj  > 0.4) & (series_obj <= 0.6)].count().compute()
+
+        churning = series_obj[(series_obj > 0.6) & (series_obj <= 0.9)].count().compute()
+
+        lost = series_obj[(series_obj > 0.9) & (series_obj <= 1)].count().compute()
+
+        bind_list = [loyal, neutral, churning, lost, DAY_AS_STR]
+
+        self.session.execute(
+            self.prep_stmt['predictions_statistics'], bind_list, timeout=self.CASS_REQ_TIMEOUT)
+
+    def save_prediction_by_date(self, client_id, prediction):
+        bind_list = [DAY_AS_STR, client_id, prediction]
+
+        self.session.execute(
+            self.prep_stmt['predictions_by_date'], bind_list, timeout=self.CASS_REQ_TIMEOUT)
+
 
 
 def batch_inference_on_partition(partition_df):
@@ -51,6 +80,7 @@ def batch_inference_on_partition(partition_df):
 
 def persist_partition(partition_df):
     def persist_one_prediction(series_obj):
+        cassandra.save_prediction_by_date(series_obj.client_id, series_obj.prediction)
         cassandra.save_prediction(series_obj.client_id, series_obj.prediction)
     cassandra = Cassandra()
     partition_df.apply(persist_one_prediction, axis=1)
@@ -59,10 +89,12 @@ def persist_partition(partition_df):
 
 if __name__ == '__main__':
     client = Client()
+    cassandra = Cassandra()
     dask_df = client.persist(dd.read_parquet(HDFS_DIR_INPUT))
     dask_df.client_id.count().compute()
     dask_df['prediction'] = dask_df.map_partitions(
         batch_inference_on_partition, meta=('prediction', float))
+    cassandra.update_predictions_statistics(dask_df['prediction'])
     dask_df['token'] = dask_df.map_partitions(
         persist_partition, meta=('token', int))
     dask_df.token.compute()
