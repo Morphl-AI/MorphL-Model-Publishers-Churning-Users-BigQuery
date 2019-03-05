@@ -66,6 +66,29 @@ CREATE TABLE morphl.ga_chp_bq_predictions (
   PRIMARY KEY ((client_id))
 );
 
+CREATE TABLE morphl.ga_chp_bq_predictions_by_prediction_date (
+  prediction_date date,
+  client_id text, 
+  prediction double,
+  PRIMARY KEY ((prediction_date), client_id)
+);
+
+CREATE TABLE morphl.ga_chp_bq_predictions_statistics (
+  prediction_date date, 
+  loyal counter,
+  neutral counter,
+  churning counter,
+  lost counter,
+  PRIMARY KEY ((prediction_date))
+);
+
+CREATE TABLE morphl.ga_chp_bq_predictions_access_logs (
+  client_id text,
+  tstamp timestamp,
+  prediction double,
+  PRIMARY KEY ((client_id), tstamp)
+) WITH CLUSTERING ORDER BY (tstamp DESC);
+
 CREATE TABLE morphl.ga_chp_bq_valid_models (
   always_zero int,
   day_as_str text,
