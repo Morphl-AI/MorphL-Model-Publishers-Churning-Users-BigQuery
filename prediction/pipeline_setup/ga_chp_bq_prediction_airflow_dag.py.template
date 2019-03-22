@@ -12,7 +12,7 @@ dag = DAG(dag_id='ga_chp_bq_prediction_pipeline',
           schedule_interval='0 12 * * *')
 
 try:
-    with open('/tmp/ga_chp_bq_prediction_pipeline_day_as_str.txt', 'r') as f:
+    with open('/tmp/ga_chp_bq_prediction_pipeline_model_day_as_str.txt', 'r') as f:
         day_as_str = f.read().strip()
 except:
     day_as_str = ''
@@ -25,7 +25,7 @@ except:
 
 # Do not remove the extra space at the end (the one after 'ga_chp_truncate_tables_before_prediction_pipeline.sh')
 task_2_truncate_tables_cmd_parts = [
-    f'DAY_AS_STR={day_as_str}',
+    f'MODEL_DAY_AS_STR={model_day_as_str}',
     f'UNIQUE_HASH={unique_hash}',
     'bash /opt/ga_chp_bq/prediction/pipeline_setup/ga_chp_bq_truncate_tables_before_prediction_pipeline.sh ']
 task_2_truncate_tables_cmd = ' '.join(task_2_truncate_tables_cmd_parts)
@@ -59,7 +59,7 @@ task_3_run_extractor_cmd = ' '.join(task_3_run_extractor_cmd_parts)
 
 # Do not remove the extra space at the end (the one after 'runbasicpreprocessor.sh')
 task_4_run_basic_preprocessor_cmd_parts = [
-    f'DAY_AS_STR={day_as_str}',
+    f'MODEL_DAY_AS_STR={model_day_as_str}',
     f'UNIQUE_HASH={unique_hash}',
     'TRAINING_OR_PREDICTION=prediction',
     'MODELS_DIR=/opt/models',
@@ -67,7 +67,7 @@ task_4_run_basic_preprocessor_cmd_parts = [
     '-v /opt/ga_chp_bq:/opt/ga_chp_bq:ro',
     '-v /opt/models:/opt/models:ro',
     '-e ENVIRONMENT_TYPE',
-    '-e DAY_AS_STR',
+    '-e MODEL_DAY_AS_STR',
     '-e UNIQUE_HASH',
     '-e TRAINING_OR_PREDICTION',
     '-e MODELS_DIR',
@@ -82,7 +82,7 @@ task_4_run_basic_preprocessor_cmd = ' '.join(
 
 # Do not remove the extra space at the end (the one after 'ga_chp_bq_preproc_prediction')
 task_5_move_preproc_metadata_cmd_parts = [
-    f'DAY_AS_STR={day_as_str}',
+    f'MODEL_DAY_AS_STR={model_day_as_str}',
     f'UNIQUE_HASH={unique_hash}',
     'bash /opt/ga_chp_bq/pre_processing/ga_chp_bq_move_metadata.sh ga_chp_bq_preproc_prediction ']
 task_5_move_preproc_metadata_cmd = ' '.join(
@@ -90,7 +90,7 @@ task_5_move_preproc_metadata_cmd = ' '.join(
 
 # Do not remove the extra space at the end (the one after 'runadvancedpreprocessor.sh')
 task_6_run_advanced_preprocessor_cmd_parts = [
-    f'DAY_AS_STR={day_as_str}',
+    f'MODEL_DAY_AS_STR={model_day_as_str}',
     f'UNIQUE_HASH={unique_hash}',
     'TRAINING_OR_PREDICTION=prediction',
     'MODELS_DIR=/opt/models',
@@ -99,7 +99,7 @@ task_6_run_advanced_preprocessor_cmd_parts = [
     '-v /opt/models:/opt/models:ro',
     '-v /opt/hadoop/etc/hadoop:/opt/hadoop/etc/hadoop:ro',
     '-e ENVIRONMENT_TYPE',
-    '-e DAY_AS_STR',
+    '-e MODEL_DAY_AS_STR',
     '-e UNIQUE_HASH',
     '-e TRAINING_OR_PREDICTION',
     '-e MODELS_DIR',
@@ -112,7 +112,7 @@ task_6_run_advanced_preprocessor_cmd = ' '.join(
 
 # Do not remove the extra space at the end (the one after 'ga_chp_bq_scaled_features_prediction')
 task_7_move_scaled_features_metadata_cmd_parts = [
-    f'DAY_AS_STR={day_as_str}',
+    f'MODEL_DAY_AS_STR={model_day_as_str}',
     f'UNIQUE_HASH={unique_hash}',
     'bash /opt/ga_chp_bq/pre_processing/ga_chp_bq_move_metadata.sh ga_chp_bq_scaled_features_prediction ']
 task_7_move_scaled_features_metadata_cmd = ' '.join(
@@ -120,8 +120,9 @@ task_7_move_scaled_features_metadata_cmd = ' '.join(
 
 # Do not remove the extra space at the end (the one after 'runbatchinference.sh')
 task_8_run_batch_inference_cmd_parts = [
-    f'DAY_AS_STR={day_as_str}',
+    f'MODEL_DAY_AS_STR={model_day_as_str}',
     f'UNIQUE_HASH={unique_hash}',
+    'DAY_AS_STR={{ ds }}'
     'TRAINING_OR_PREDICTION=prediction',
     'MODELS_DIR=/opt/models',
     'docker run --rm --net host',
@@ -129,8 +130,9 @@ task_8_run_batch_inference_cmd_parts = [
     '-v /opt/models:/opt/models:ro',
     '-v /opt/hadoop/etc/hadoop:/opt/hadoop/etc/hadoop:ro',
     '-e ENVIRONMENT_TYPE',
-    '-e DAY_AS_STR',
+    '-e MODEL_DAY_AS_STR',
     '-e UNIQUE_HASH',
+    '-e DAY_AS_STR',
     '-e TRAINING_OR_PREDICTION',
     '-e MODELS_DIR',
     '-e MORPHL_SERVER_IP_ADDRESS',

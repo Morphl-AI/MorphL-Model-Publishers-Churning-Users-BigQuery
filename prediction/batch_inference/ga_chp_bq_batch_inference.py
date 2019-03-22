@@ -6,13 +6,14 @@ from keras.models import load_model
 
 import dask.dataframe as dd
 
+MODEL_DAY_AS_STR = getenv('MODEL_DAY_AS_STR')
 DAY_AS_STR = getenv('DAY_AS_STR')
 UNIQUE_HASH = getenv('UNIQUE_HASH')
 
 MORPHL_SERVER_IP_ADDRESS = getenv('MORPHL_SERVER_IP_ADDRESS')
 
 HDFS_PORT = 9000
-HDFS_DIR_INPUT = f'hdfs://{MORPHL_SERVER_IP_ADDRESS}:{HDFS_PORT}/{DAY_AS_STR}_{UNIQUE_HASH}_ga_chp_bq_scaled_features_prediction'
+HDFS_DIR_INPUT = f'hdfs://{MORPHL_SERVER_IP_ADDRESS}:{HDFS_PORT}/{MODEL_DAY_AS_STR}_{UNIQUE_HASH}_ga_chp_bq_scaled_features_prediction'
 
 
 class Cassandra:
@@ -28,7 +29,6 @@ class Cassandra:
         template_for_predictions_by_date = 'INSERT INTO ga_chp_bq_predictions_by_prediction_date (prediction_date, client_id, prediction) VALUES (?,?,?)'
         template_for_predictions_statistics = 'UPDATE ga_chp_bq_predictions_statistics SET loyal=loyal+?, neutral=neutral+?, churning=churning+?, lost=lost+? WHERE prediction_date=?'
 
-
         self.CASS_REQ_TIMEOUT = 3600.0
 
         self.auth_provider = PlainTextAuthProvider(
@@ -38,9 +38,12 @@ class Cassandra:
             [self.MORPHL_SERVER_IP_ADDRESS], auth_provider=self.auth_provider)
         self.session = self.cluster.connect(self.MORPHL_CASSANDRA_KEYSPACE)
 
-        self.prep_stmt['prediction'] = self.session.prepare(template_for_prediction)
-        self.prep_stmt['predictions_by_date'] = self.session.prepare(template_for_predictions_by_date)
-        self.prep_stmt['predictions_statistics'] = self.session.prepare(template_for_predictions_statistics)
+        self.prep_stmt['prediction'] = self.session.prepare(
+            template_for_prediction)
+        self.prep_stmt['predictions_by_date'] = self.session.prepare(
+            template_for_predictions_by_date)
+        self.prep_stmt['predictions_statistics'] = self.session.prepare(
+            template_for_predictions_statistics)
 
     def save_prediction(self, client_id, prediction):
         bind_list = [client_id, prediction]
@@ -51,11 +54,14 @@ class Cassandra:
 
         loyal = series_obj[series_obj <= 0.4].count().compute()
 
-        neutral = series_obj[(series_obj  > 0.4) & (series_obj <= 0.6)].count().compute()
+        neutral = series_obj[(series_obj > 0.4) & (
+            series_obj <= 0.6)].count().compute()
 
-        churning = series_obj[(series_obj > 0.6) & (series_obj <= 0.9)].count().compute()
+        churning = series_obj[(series_obj > 0.6) & (
+            series_obj <= 0.9)].count().compute()
 
-        lost = series_obj[(series_obj > 0.9) & (series_obj <= 1)].count().compute()
+        lost = series_obj[(series_obj > 0.9) & (
+            series_obj <= 1)].count().compute()
 
         bind_list = [loyal, neutral, churning, lost, DAY_AS_STR]
 
@@ -69,9 +75,8 @@ class Cassandra:
             self.prep_stmt['predictions_by_date'], bind_list, timeout=self.CASS_REQ_TIMEOUT)
 
 
-
 def batch_inference_on_partition(partition_df):
-    churn_model_file = f'/opt/models/{DAY_AS_STR}_{UNIQUE_HASH}_ga_chp_bq_churn_model.h5'
+    churn_model_file = f'/opt/models/{MODEL_DAY_AS_STR}_{UNIQUE_HASH}_ga_chp_bq_churn_model.h5'
     churn_model = load_model(churn_model_file)
     prediction = churn_model.predict(
         partition_df.drop(['client_id'], axis=1))[0][0]
@@ -80,7 +85,8 @@ def batch_inference_on_partition(partition_df):
 
 def persist_partition(partition_df):
     def persist_one_prediction(series_obj):
-        cassandra.save_prediction_by_date(series_obj.client_id, series_obj.prediction)
+        cassandra.save_prediction_by_date(
+            series_obj.client_id, series_obj.prediction)
         cassandra.save_prediction(series_obj.client_id, series_obj.prediction)
     cassandra = Cassandra()
     partition_df.apply(persist_one_prediction, axis=1)

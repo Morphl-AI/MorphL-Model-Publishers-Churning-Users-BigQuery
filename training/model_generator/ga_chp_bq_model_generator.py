@@ -3,7 +3,7 @@ from distributed import Client
 import dask.dataframe as dd
 from model_generator import ModelGenerator
 
-DAY_AS_STR = getenv('DAY_AS_STR')
+MODEL_DAY_AS_STR = getenv('MODEL_DAY_AS_STR')
 UNIQUE_HASH = getenv('UNIQUE_HASH')
 
 TRAINING_OR_PREDICTION = getenv('TRAINING_OR_PREDICTION')
@@ -11,7 +11,7 @@ TRAINING_OR_PREDICTION = getenv('TRAINING_OR_PREDICTION')
 MORPHL_SERVER_IP_ADDRESS = getenv('MORPHL_SERVER_IP_ADDRESS')
 
 HDFS_PORT = 9000
-HDFS_DIR_INPUT = f'hdfs://{MORPHL_SERVER_IP_ADDRESS}:{HDFS_PORT}/{DAY_AS_STR}_{UNIQUE_HASH}_ga_chp_bq_scaled_features_training'
+HDFS_DIR_INPUT = f'hdfs://{MORPHL_SERVER_IP_ADDRESS}:{HDFS_PORT}/{MODEL_DAY_AS_STR}_{UNIQUE_HASH}_ga_chp_bq_scaled_features_training'
 
 
 def main():
