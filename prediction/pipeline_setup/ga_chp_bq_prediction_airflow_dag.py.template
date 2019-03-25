@@ -13,9 +13,9 @@ dag = DAG(dag_id='ga_chp_bq_prediction_pipeline',
 
 try:
     with open('/tmp/ga_chp_bq_prediction_pipeline_model_day_as_str.txt', 'r') as f:
-        day_as_str = f.read().strip()
+        model_day_as_str = f.read().strip()
 except:
-    day_as_str = ''
+    model_day_as_str = ''
 
 try:
     with open('/tmp/ga_chp_bq_prediction_pipeline_unique_hash.txt', 'r') as f:
