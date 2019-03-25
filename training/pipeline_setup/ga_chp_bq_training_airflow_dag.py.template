@@ -85,7 +85,7 @@ task_5_move_preproc_metadata_cmd = ' '.join(
 
 # Do not remove the extra space at the end (the one after 'runadvancedpreprocessor.sh')
 task_6_run_advanced_preprocessor_cmd_parts = [
-    f'MODEL_DAY_AS_STR={modelday_as_str}',
+    f'MODEL_DAY_AS_STR={model_day_as_str}',
     f'UNIQUE_HASH={unique_hash}',
     'TRAINING_OR_PREDICTION=training',
     'MODELS_DIR=/opt/models',
