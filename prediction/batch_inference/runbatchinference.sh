@@ -1,5 +1,5 @@
 cp -r /opt/ga_chp_bq /opt/code
 cd /opt/code
 git pull
-python /opt/code/prediction/batch_inference/ga_chp_bq_batch_inference.py
+spark-submit --jars /opt/spark/jars/spark-cassandra-connector.jar,/opt/spark/jars/jsr166e.jar,/opt/spark/jars/spark-avro.jar /opt/code/prediction/batch_inference/ga_chp_bq_batch_inference.py
 
