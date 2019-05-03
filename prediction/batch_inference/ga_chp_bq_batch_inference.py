@@ -73,7 +73,6 @@ def batch_inference(partition):
                                       row.is_mobile,
                                       row.is_tablet,
                                       row.session_duration,
-                                      row.time_on_page
                                       ]])
 
         result.append((row.client_id, ) +
