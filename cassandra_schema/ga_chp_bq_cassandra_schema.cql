@@ -75,10 +75,10 @@ CREATE TABLE morphl.ga_chp_bq_predictions_by_prediction_date (
 
 CREATE TABLE morphl.ga_chp_bq_predictions_statistics (
   prediction_date date, 
-  loyal counter,
-  neutral counter,
-  churning counter,
-  lost counter,
+  loyal double,
+  neutral double,
+  churning double,
+  lost double,
   PRIMARY KEY ((prediction_date))
 );
 

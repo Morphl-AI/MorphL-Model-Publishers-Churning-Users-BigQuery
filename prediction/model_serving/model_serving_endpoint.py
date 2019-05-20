@@ -59,7 +59,6 @@ class Cassandra:
         template_for_models_rows = 'SELECT accuracy, loss, day_as_str FROM ga_chp_bq_valid_models WHERE is_model_valid = True LIMIT 20 ALLOW FILTERING'
         template_for_access_log_insert = 'INSERT INTO ga_chp_bq_predictions_access_logs (client_id, tstamp, prediction) VALUES (?,?,?)'
 
-
         self.prep_stmts['predictions']['single'] = self.session.prepare(
             template_for_single_row)
         self.prep_stmts['predictions']['multiple'] = self.session.prepare(
@@ -70,7 +69,6 @@ class Cassandra:
             template_for_models_rows)
         self.prep_stmts['access_logs']['insert'] = self.session.prepare(
             template_for_access_log_insert)
-
 
     def retrieve_prediction(self, client_id):
         bind_list = [client_id]
@@ -106,12 +104,11 @@ class Cassandra:
 
     def get_statistics(self, date):
         bind_list = [date]
-        
+
         response = self.session.execute(
             self.prep_stmts['predictions']['statistics'], bind_list, timeout=self.CASS_REQ_TIMEOUT)._current_rows
 
         return {} if not response else response[0]
-
 
     def get_model_statistics(self):
         return self.session.execute(self.prep_stmts['models']['multiple'], timeout=self.CASS_REQ_TIMEOUT)._current_rows
@@ -251,6 +248,7 @@ def get_model_statistics():
         status=1,
         model_statistics=model_statistics
     )
+
 
 if __name__ == '__main__':
     app.config['CASSANDRA'] = Cassandra()
